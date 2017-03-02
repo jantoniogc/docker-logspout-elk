@@ -1,0 +1,56 @@
+logspout:
+  image: gliderlabs/logspout:v3
+  command: 'syslog://logstash:5000'
+  links:
+    - logstash
+  volumes:
+    - '/var/run/docker.sock:/tmp/docker.sock'
+
+logstash:
+  image: ludekvesely/logstash-json
+  environment:
+    - LOGSPOUT=ignore
+    - DROP_NON_JSON=false
+    - STDOUT=true
+  links:
+    - elasticsearch
+
+kibana:
+  image: kibana
+  environment:
+    - LOGSPOUT=ignore
+  links:
+    - elasticsearch
+  ports:
+    - '5601:5601'
+
+elasticsearch:
+  image: elasticsearch
+  environment:
+    - LOGSPOUT=ignore
+
+
+DocManagerData:
+   image: ubuntu
+   volumes:
+     - "/tmp/DOCManager"
+     - "/tmp/DOCManager/temp"
+
+haproxy:
+   image: jantoniogc/haproxy
+   links:
+     - "libreoffice:libreoffice"
+   volumes:
+     - /etc/haproxy/haproxy.cfg:/etc/haproxy/haproxy.cfg
+   ports:
+     - "8997:8997"
+     - "1936:1936"
+
+libreoffice:
+   image: jantoniogc/libreoffice
+   environment:
+     - TCP_PORTS=8997
+   expose:
+     - "8997"
+   volumes_from:
+     - DocManagerData
